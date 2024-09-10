@@ -37,3 +37,7 @@ next-env.d.ts
 
 backend/myenv
 backend/__pycache__
+/home/goravm/WorkSpace/WCV/src/website/backend/myenv
+/home/goravm/WorkSpace/WCV/src/website/backend/__pycache__
+
+.pyc
