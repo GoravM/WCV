@@ -1,29 +1,26 @@
+import io
 import cv2
-import time
+from fastapi import FastAPI
+from fastapi.responses import Response
 
-def captureoneframe():
-    # Initialize the camera
-    cap = cv2.VideoCapture(0)  # Change the index if needed
 
+app = FastAPI()
+
+@app.get("/image")
+def get_image():
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open camera.")
         return
 
-    # Wait for a short period to let the camera warm up
-    time.sleep(2)  # Wait for 2 seconds
-
-    # Attempt to capture a frame
     ret, frame = cap.read()
+    cap.release()
 
     if not ret:
         print("Error: Can't receive frame. Exiting ...")
-    else:
-        # Save the captured frame
-        cv2.imwrite('capturedimage.jpg', frame)
-        print("Image captured and saved as 'capturedimage.jpg'.")
+        return 
 
-    # Release the capture
-    cap.release()
+    _, buffer = cv2.imencode('.jpg', frame)
+    data = io.BytesIO(buffer)
 
-if __name__ == '__main__':
-    captureoneframe()
+    return Response(content=data.getvalue(), media_type="image/")

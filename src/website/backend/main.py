@@ -11,6 +11,7 @@ app = FastAPI()
 # Initialize the camera (you may need to adjust the camera index if it's not the default)
 camera = cv2.VideoCapture(0)
 
+
 @app.get("/image")
 def get_image():
     ret, frame = camera.read()  # Capture frame-by-frame
@@ -49,6 +50,7 @@ def generate_frames():
         _, jpeg = cv2.imencode('.jpg', frame)
         yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + jpeg.tobytes() + b"\r\n")
 
+
 @app.get("/mjpeg")
 async def mjpeg():
     def stop():
@@ -59,3 +61,28 @@ async def mjpeg():
         media_type="multipart/x-mixed-replace; boundary=frame",
         background=BackgroundTask(stop),
     )
+
+
+@app.post("/{direction}")
+async def control_movement(direction: str):
+
+    print("CALLED")
+    print(direction)
+    if direction == "forward":
+        # Logic for moving forward
+        return {"message": "Moving forward"}
+    elif direction == "left":
+        # Logic for turning left
+        return {"message": "Turning left"}
+    elif direction == "stop":
+        # Logic for stopping
+        return {"message": "Stopped"}
+    elif direction == "right":
+        # Logic for turning right
+        return {"message": "Turning right"}
+    elif direction == "reverse":
+        # Logic for moving in reverse
+        return {"message": "Moving in reverse"}
+    else:
+        return {"message": "Unknown command"}
+

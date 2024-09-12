@@ -37,7 +37,7 @@ int main(void){
 	softPwmCreate(enablePin,0,100);//define PMW pin
 	
 	while(1){
-		int value = -100;
+		int value = 0;
 		//read analog value of A0 pin
 		//printf("ADC value : %d \n",value);
 		motor(value);
