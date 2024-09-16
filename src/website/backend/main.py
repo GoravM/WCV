@@ -5,6 +5,7 @@ from starlette.background import BackgroundTask
 from fastapi.responses import Response, StreamingResponse
 from threading import Condition
 import logging
+import socket
 
 app = FastAPI()
 
@@ -63,26 +64,72 @@ async def mjpeg():
     )
 
 
-@app.post("/{direction}")
+# @app.post("/{direction}")
+# async def control_movement(direction: str):
+
+#     print("CALLED")
+#     print(direction)
+#     if direction == "forward":
+#         # Logic for moving forward
+#         return {"message": "Moving forward"}
+#     elif direction == "left":
+#         # Logic for turning left
+#         return {"message": "Turning left"}
+#     elif direction == "stop":
+#         # Logic for stopping
+#         return {"message": "Stopped"}
+#     elif direction == "right":
+#         # Logic for turning right
+#         return {"message": "Turning right"}
+#     elif direction == "reverse":
+#         # Logic for moving in reverse
+#         return {"message": "Moving in reverse"}
+#     else:
+#         return {"message": "Unknown command"}
+
+@app.post("/motor_control/{direction}")
 async def control_movement(direction: str):
 
     print("CALLED")
     print(direction)
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect(('127.0.0.1', 65432))  # Connect to C++ server
+
     if direction == "forward":
         # Logic for moving forward
-        return {"message": "Moving forward"}
+        client_socket.sendall(b'forward')
+        data = client_socket.recv(1024)
+        client_socket.close()
+        return {"message": "Moving forward " + data.decode('utf-8')}
+
     elif direction == "left":
         # Logic for turning left
-        return {"message": "Turning left"}
+        client_socket.sendall(b'left')
+        data = client_socket.recv(1024)
+        client_socket.close()
+        return {"message": "Turning left " + data.decode('utf-8')}
+
     elif direction == "stop":
         # Logic for stopping
-        return {"message": "Stopped"}
+        client_socket.sendall(b'stop')
+        data = client_socket.recv(1024)
+        client_socket.close()
+        return {"message": "Stopped " + data.decode('utf-8')}
+
     elif direction == "right":
         # Logic for turning right
-        return {"message": "Turning right"}
+        client_socket.sendall(b'right')
+        data = client_socket.recv(1024)
+        client_socket.close()
+        return {"message": "Turning right " + data.decode('utf-8')}
+
     elif direction == "reverse":
         # Logic for moving in reverse
-        return {"message": "Moving in reverse"}
+        client_socket.sendall(b'reverse')
+        data = client_socket.recv(1024)
+        client_socket.close()
+        return {"message": "Moving in reverse: " + data.decode('utf-8')}
+
     else:
         return {"message": "Unknown command"}
-

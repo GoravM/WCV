@@ -4,9 +4,9 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define motorPin1 2
-#define motorPin2 0
-#define enablePin 3
+#define motorPin1 4
+#define motorPin2 1
+#define enablePin 5
 
 void motor(int ADC){
 	int value = ADC;
@@ -37,7 +37,7 @@ int main(void){
 	softPwmCreate(enablePin,0,100);//define PMW pin
 	
 	while(1){
-		int value = 0;
+		int value = 100;
 		//read analog value of A0 pin
 		//printf("ADC value : %d \n",value);
 		motor(value);
