@@ -3,7 +3,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-
 #include <wiringPi.h>
 #include <stdio.h>
 #include <softPwm.h>
@@ -54,34 +53,51 @@ int main() {
 
     // SET UP THE MOTORS
     wiringPiSetup();
-	pinMode(enablePin1,OUTPUT);//set mode for the pin
-	pinMode(motorPin1,OUTPUT);
-	pinMode(motorPin2,OUTPUT);
-	softPwmCreate(enablePin1,0,100);//define PMW pin
+    pinMode(enablePin1,OUTPUT);//set mode for the pin
+    pinMode(motorPin1,OUTPUT);
+    pinMode(motorPin2,OUTPUT);
+    softPwmCreate(enablePin1,0,100);//define PMW pin
 
-	pinMode(enablePin2,OUTPUT);//set mode for the pin
-	pinMode(motorPin3,OUTPUT);
-	pinMode(motorPin4,OUTPUT);
-	softPwmCreate(enablePin2,0,100);//define PMW pin
+    pinMode(enablePin2,OUTPUT);//set mode for the pin
+    pinMode(motorPin3,OUTPUT);
+    pinMode(motorPin4,OUTPUT);
+    softPwmCreate(enablePin2,0,100);//define PMW pin
 
-// Run the server continuously to accept client connections
+    // Initialize motor speeds outside the loop to retain values
+    int speed1 = 50;
+    int speed2 = 50;
+
+    // Run the server continuously to accept client connections
     while (true) {
         // Accept a client connection (blocking call)
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
             std::cerr << "Accept failed!" << std::endl;
             return -1;
         }
-        int speed1 = 100;
-        int speed2 = 100;
 
         const char *response = "";
         int bytes_read = read(new_socket, buffer, 1024);
-        
         if (bytes_read > 0) {
             std::cout << "Received: " << buffer << std::endl;
-            if (strcmp(buffer, "forward") == 0) {
-                digitalWrite(motorPin1, HIGH);
-                digitalWrite(motorPin2, LOW);
+
+            // Check if the command is a speed change
+            if (strncmp(buffer, "speed=", 6) == 0) {
+                // Extract the speed value from the command
+                int new_speed = atoi(buffer + 6);
+                if (new_speed >= 0 && new_speed <= 100) {
+                    speed1 = new_speed;
+                    speed2 = new_speed;
+                    response = "Speed updated";
+                    std::cout << "Speed updated to " << new_speed << std::endl;
+                } else {
+                    response = "Invalid speed value!";
+                    std::cout << "Invalid speed value!" << std::endl;
+                }
+            }
+            // Handle movement commands
+            else if (strcmp(buffer, "forward") == 0) {
+                digitalWrite(motorPin1, LOW);
+                digitalWrite(motorPin2, HIGH);
                 softPwmWrite(enablePin1, speed1);
 
                 digitalWrite(motorPin3, LOW);
@@ -91,8 +107,8 @@ int main() {
                 response = "Moving forward...";
                 std::cout << "Moving forward..." << std::endl;
             } else if (strcmp(buffer, "reverse") == 0) {
-                digitalWrite(motorPin1, LOW);
-                digitalWrite(motorPin2, HIGH);
+                digitalWrite(motorPin1, HIGH);
+                digitalWrite(motorPin2, LOW);
                 softPwmWrite(enablePin1, speed1);
 
                 digitalWrite(motorPin3, HIGH);
@@ -102,16 +118,9 @@ int main() {
                 response = "Moving backward...";
                 std::cout << "Moving backward..." << std::endl;
             } else if (strcmp(buffer, "stop") == 0) {
-                speed1 = 0;
-                speed2 = 0;
-
-                digitalWrite(motorPin1, HIGH);
-                digitalWrite(motorPin2, LOW);
-                softPwmWrite(enablePin1, speed1);
-
-                digitalWrite(motorPin3, HIGH);
-                digitalWrite(motorPin4, LOW);
-                softPwmWrite(enablePin2, speed2);
+                // Set speeds to zero to stop the motors
+                softPwmWrite(enablePin1, 0);
+                softPwmWrite(enablePin2, 0);
 
                 response = "Stopping...";
                 std::cout << "Stopping..." << std::endl;
@@ -133,17 +142,15 @@ int main() {
 
                 digitalWrite(motorPin3, HIGH);
                 digitalWrite(motorPin4, LOW);
-                softPwmWrite(enablePin1, speed2);
+                softPwmWrite(enablePin2, speed2);
 
                 response = "Turning right...";
                 std::cout << "Turning right..." << std::endl;
             } else {
-
                 response = "Invalid command!";
                 std::cout << "Invalid command!" << std::endl;
             }
             // Send a response back to the client
-
             send(new_socket, response, strlen(response), 0);
             std::cout << "Response sent to client." << std::endl;
         }
