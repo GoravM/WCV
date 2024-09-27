@@ -95,8 +95,15 @@ async def control_movement(direction: str):
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect(('127.0.0.1', 65432))  # Connect to C++ server
-
-    if direction == "forward":
+    if direction[0:5] == "speed":
+        speed = direction.split("=")[1]
+        speed = "speed="+speed
+        print(speed)
+        client_socket.sendall(speed.encode("utf-8"))
+        data = client_socket.recv(1024)
+        client_socket.close()
+        return {"message": "Speed changed " + data.decode('utf-8')}
+    elif direction == "forward":
         # Logic for moving forward
         client_socket.sendall(b'forward')
         data = client_socket.recv(1024)
